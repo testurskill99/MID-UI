@@ -1,0 +1,94 @@
+.font-light {
+  font-weight: 300;
+}
+
+.font-regular {
+  font-weight: 400;
+}
+
+.font-medium {
+  font-weight: 500;
+}
+
+.font-bold {
+  font-weight: 700;
+}
+
+.font-dark {
+  font-weight: 900;
+}
+
+.btn-ct,
+.btn-ct:hover,
+.btn-ct:active,
+.btn-ct:visited {
+  background-color: #214c7f !important;
+  color: #ffffff !important;
+  text-transform: unset !important;
+}
+
+.btn-ct-secondary,
+.btn-ct-secondary:hover,
+.btn-ct-secondary:active,
+.btn-ct-secondary:visited {
+  background-color: #A3A4A3 !important;
+  color: #212121 !important;
+  text-transform: unset !important;
+}
+
+.btn-ct:disabled,
+.btn-ct-secondary:disabled {
+  background-color: #A3A4A3 !important;
+  cursor: no-drop;
+}
+
+.h-100-vh {
+  height: 100vh !important;
+}
+
+.title {
+  font-size: 1.75rem;
+}
+
+.subTitle {
+  font-size: 1.25rem;
+  line-height: 1.5;
+}
+
+.secondarySub {
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.text-ct-dark {
+  color: #212121 !important;
+}
+
+.bg-ct-dark {
+  background-color: #212121 !important;
+}
+
+[class^='ct-navbar-'], [class*='ct-navbar-'] {
+  position: fixed;
+  z-index: 1000;
+  padding-top: 1rem;
+    padding-bottom: 1rem;
+  left: 0;
+  right: 0;
+  top: 0;
+  backdrop-filter: blur(.5rem) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(.5rem) saturate(180%) !important;
+  padding: 1rem 1.25rem;
+  /* box-shadow: 1px 0px 8px 0px rgb(97 97 97 / 15%);
+  -webkit-box-shadow: 1px 0px 8px 0px rgb(97 97 97 / 15%); */
+}
+
+.ct-navbar-dark {
+  background-color: rgba(33, 33, 33, 0.82);
+  color: #ffffff;
+}
+
+.ct-navbar-white {
+  background-color: rgba(255, 255, 255, 0.82);
+  color: #212121;
+}

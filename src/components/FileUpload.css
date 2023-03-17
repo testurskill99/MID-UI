@@ -1,0 +1,62 @@
+/*.container {
+  width: 100%;
+  height: 100%;
+  background-color: #000000;
+}*/
+
+.nav-link {
+  color: white;
+}
+
+.uploadSection {
+  padding-top: 86px;
+}
+
+.left-pan-div {
+  margin-top: 0.2rem;
+  background-color: #1034a6;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+.viewer-div {
+  margin-top: 0.2rem;
+  background-color: #1034a6;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+.chosen-file-label,
+.chosen-file-label:hover {
+  color: #09cff0;
+  font-size: 0.8rem;
+}
+.btn {
+  width: -webkit-fill-available;
+}
+.file-comp-container {
+  overflow-x: hidden;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+.container {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+.customCard {
+  border: 1px solid silver;
+  border-radius: 4px;
+}
+
+.customCardHeader {
+  background-color: #CECECE;
+  color: #212121;
+  padding: .75rem .5rem;
+}
