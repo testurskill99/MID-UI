@@ -1,4 +1,4 @@
-export const imageInfo = [
+export const urlInfo = [
   {
     type: "png",
     url: "pngtopng"
@@ -8,13 +8,11 @@ export const imageInfo = [
     url: "jpgtojpg"
   },
   {
-    id: 3,
-    path: "../images/jpegsample.jpeg",
     type: "jpeg",
+    url: "jpegtojpeg"
   },
   {
-    id: 4,
-    path: "../images/case2.dcm",
     type: "dcm",
+    url: "dcmtopng"
   },
 ];
