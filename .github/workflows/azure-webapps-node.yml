@@ -23,8 +23,8 @@ on:
   workflow_dispatch:
 
 env:
-  AZURE_WEBAPP_NAME: 'CT-MID-UI'    # set this to your application's name
-  AZURE_WEBAPP_PACKAGE_PATH: '.'      # set this to the path to your web app project, defaults to the repository root
+  AZURE_WEBAPP_NAME: 'mywebctmidapp'  # set this to your application's name
+  AZURE_WEBAPP_PACKAGE_PATH: '/home/site/wwwroot/ct-mid-ui'      # set this to the path to your web app project, defaults to the repository root
   NODE_VERSION: '14.x'                # set this to the node version to use
 
 permissions:
@@ -39,7 +39,7 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: ${{ env.NODE_VERSION }}
+        node-version: '14.x'
         cache: 'npm'
 
     - name: npm install, build, and test
