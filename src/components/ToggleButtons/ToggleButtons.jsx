@@ -3,8 +3,8 @@ import React from 'react';
 import MuiToggleButton from "@mui/material/ToggleButton";
 import { styled } from "@mui/material/styles";
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
-import { MdRebaseEdit } from 'react-icons/md';
-import { FiZoomIn } from 'react-icons/fi';
+// import { MdRebaseEdit } from 'react-icons/md';
+// import { FiZoomIn } from 'react-icons/fi';
 
 function ToggleButtons(props) {
 
