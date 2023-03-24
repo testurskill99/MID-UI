@@ -2,10 +2,9 @@ import React from "react";
 import "../assets/css/custom.css";
 import { useNavigate, useLocation } from "react-router-dom";
 import ctLogo from "../images/ct-logo.png";
-import { FiArrowLeft } from "react-icons/fi";
-import { FaArrowLeft, FaChevronLeft } from "react-icons/fa";
-import { BsImages } from "react-icons/bs";
+import { FaArrowLeft } from "react-icons/fa";
 import Button from "@mui/material/Button";
+import TryDenoiseButtonComponent from "./shared-components/TryDenoiseButton";
 
 const NavbarComponent = (props) => {
   let navigate = useNavigate();
@@ -40,13 +39,7 @@ const NavbarComponent = (props) => {
               Back to Home
             </Button>
           ) : (
-            <Button
-              className="btn-ct"
-              type="button"
-              onClick={(e) => navigate("/image-upload")}
-              startIcon={<BsImages size={14} style={{marginLeft: '5px'}} />}
-            > Try Denoiser now
-            </Button>
+            <TryDenoiseButtonComponent />
           )}
         </span>
       </div>

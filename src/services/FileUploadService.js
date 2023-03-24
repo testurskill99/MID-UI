@@ -7,11 +7,18 @@ const upload = (file, onUploadProgress) => {
   return axios.post('http://localhost:5000/upload', formData)
 };
 
+const denoiseImage = (urlPath) => {
+  return axios.get(`http://localhost:5000/denoise/${urlPath}`, {responseType: "json"})
+};
+
 const getFiles = () => {
   return http.get("/files");
 };
 
-export default {
+const services = {
   upload,
   getFiles,
-};
+  denoiseImage
+}
+
+export default services;
