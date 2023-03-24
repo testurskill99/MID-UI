@@ -3,7 +3,6 @@ import UploadService from "../services/FileUploadService";
 import Button from "@mui/material/Button";
 import CornerstoneViewport from "react-cornerstone-viewport";
 import cornerstoneWADOImageLoader from "cornerstone-wado-image-loader";
-// import Tiff from "../assets/js/tiff.min.js";
 import initCornerstone from "../initCornerStone";
 import "./FileUpload.css";
 
@@ -25,7 +24,6 @@ import { IconButton } from "@mui/material";
 import { FiMaximize, FiMinimize } from "react-icons/fi";
 import BASliderComponent from "./ba_slider/BASlider";
 
-import { TIFFViewer } from "react-tiff";
 import "react-tiff/dist/index.css";
 
 const ImageUpload = () => {
@@ -43,7 +41,6 @@ const ImageUpload = () => {
   const [mimeType, setMimeType] = useState("");
   const [filename, setFilename] = useState("");
   const [uploadedImageSrc, setuploadedImageSrc] = useState("");
-  const [tiffFile, setTiffFile] = useState("");
   const [baSliderImages, setBaSliderImages] = useState({
     firstImage: null,
     secondImage: null,
@@ -53,7 +50,7 @@ const ImageUpload = () => {
     message: "",
     title: "info",
   });
-  const [tools, setTools] = useState([
+  const tools = [
     // Mouse
     {
       name: "Wwwc",
@@ -81,7 +78,7 @@ const ImageUpload = () => {
     { name: "PanMultiTouch", mode: "active" },
     { name: "ZoomTouchPinch", mode: "active" },
     { name: "StackScrollMultiTouch", mode: "active" },
-  ]);
+  ];
 
   const [imageIds, setImageIds] = useState([]);
 
@@ -266,7 +263,7 @@ const ImageUpload = () => {
     return () => {
       URL.revokeObjectURL(denoisedImage);
     };
-  }, []);
+  }, [denoisedImage]);
   return (
     <div className="d-flex flex-column col px-0 bg-light">
       <NavbarComponent />
@@ -291,7 +288,7 @@ const ImageUpload = () => {
                     {["png", "jpeg", "jpg"].includes(mimeType) && (
                       <>
                         <BiInfoCircle size={16} className="mx-1" />
-                        Zoom  / Annotate supports only .DCM format.
+                        Zoom / Annotate supports only .DCM format.
                       </>
                     )}
                   </div>
@@ -372,35 +369,22 @@ const ImageUpload = () => {
                       <h5>Before</h5>
                       {isJpegOrPng ? (
                         <>
-                          {mimeType !== "tiff" ? (
-                            <div
-                              id="cornerStoneImageB"
-                              style={{
-                                minWidth: "100%",
-                                height: "512px",
-                                flex: "1",
-                                border: "1px solid #0197f6",
-                              }}
-                            >
-                              <img
-                                width="100%"
-                                height="512px"
-                                src={uploadedImageSrc}
-                                alt="Uploaded"
-                              />
-                            </div>
-                          ) : (
-                            <TIFFViewer
-                              style={{
-                                minWidth: "100%",
-                                height: "512px",
-                                flex: "1",
-                                border: "1px solid #0197f6",
-                              }}
-                              tiff={tiffFile}
-                              lang="en"
+                          <div
+                            id="cornerStoneImageB"
+                            style={{
+                              minWidth: "100%",
+                              height: "512px",
+                              flex: "1",
+                              border: "1px solid #0197f6",
+                            }}
+                          >
+                            <img
+                              width="100%"
+                              height="512px"
+                              src={uploadedImageSrc}
+                              alt="Uploaded"
                             />
-                          )}
+                          </div>
                         </>
                       ) : (
                         <>
