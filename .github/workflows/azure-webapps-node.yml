@@ -71,7 +71,10 @@ jobs:
         path: download
     
     - name: 'Echo download path'
-      run: echo ${{steps.reactapp.outputs.download-path}}
+      run: |
+        echo ${{steps.reactapp.outputs.download-path}}
+        cd ${{steps.reactapp.outputs.download-path}}
+        ls -ll
 
 #     - name: 'Deploy to Azure WebApp'
 #       id: deploy-to-webapp
