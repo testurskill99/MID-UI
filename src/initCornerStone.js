@@ -3,6 +3,7 @@ import cornerstone from "cornerstone-core";
 import cornerstoneWADOImageLoader from "cornerstone-wado-image-loader";
 import cornerstoneMath from "cornerstone-math";
 import cornerstoneTools from "cornerstone-tools";
+import cornerstoneWebImageLoader from "cornerstone-web-image-loader";
 import Hammer from "hammerjs";
 
 export default function initCornerstone() {
@@ -30,6 +31,7 @@ export default function initCornerstone() {
   // IMAGE LOADER
   cornerstoneWADOImageLoader.external.cornerstone = cornerstone;
   cornerstoneWADOImageLoader.external.dicomParser = dicomParser;
+  cornerstoneWebImageLoader.external.cornerstone = cornerstone;
   cornerstoneWADOImageLoader.webWorkerManager.initialize({
     maxWebWorkers: navigator.hardwareConcurrency || 1,
     startWebWorkersOnDemand: true,
@@ -41,6 +43,7 @@ export default function initCornerstone() {
       },
     },
   });
+  cornerstone.registerImageLoader('data', cornerstoneWebImageLoader.loadImage);
 
   // Debug
   window.cornerstone = cornerstone;

@@ -3,12 +3,10 @@ import UploadService from "../services/FileUploadService";
 import Button from "@mui/material/Button";
 import CornerstoneViewport from "react-cornerstone-viewport";
 import cornerstoneWADOImageLoader from "cornerstone-wado-image-loader";
+// import Tiff from "../assets/js/tiff.min.js";
 import initCornerstone from "../initCornerStone";
 import "./FileUpload.css";
-// import axios from "axios";
-// import { styled } from "@mui/material/styles";
 
-// New Changes
 import ToggleButtons from "./ToggleButtons/ToggleButtons";
 import NavbarComponent from "./Navbar";
 
@@ -20,26 +18,36 @@ import MenuItem from "@mui/material/MenuItem";
 import FormControl from "@mui/material/FormControl";
 import Select from "@mui/material/Select";
 import { FaChevronDown } from "react-icons/fa";
-import { BiUpload } from "react-icons/bi";
+import { BiErrorCircle, BiInfoCircle, BiUpload } from "react-icons/bi";
 import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
-import AlertTitle from "@mui/material/AlertTitle";
+import { IconButton } from "@mui/material";
+import { FiMaximize, FiMinimize } from "react-icons/fi";
+import BASliderComponent from "./ba_slider/BASlider";
+
+import { TIFFViewer } from "react-tiff";
+import "react-tiff/dist/index.css";
 
 const ImageUpload = () => {
   const [currentFile, setCurrentFile] = useState(undefined);
-  const [previewImage, setPreviewImage] = useState(undefined);
-  const [uploadAndPreviewImage, setUploadAndPreviewImage] = useState(undefined);
-  const [denoisedImage, setDenoisedImage] = useState(undefined);
+  const [uploadAndPreviewImage, setUploadAndPreviewImage] = useState(false);
+  const [denoisedImage, setDenoisedImage] = useState(null);
+  const [desnoiseResult, setDenoiseResult] = useState(null);
   const [isImageDenoising, setIsImageDenoising] = useState(false);
+  const [denoiseStatus, setDenoiseStatus] = useState("SUCCESS");
   const [isJpegOrPng, setIsJpegOrPng] = useState(true);
-  const [progress, setProgress] = useState(0);
-  //  const [isPreviewBefore, setIsPreviewBefore] = useState(true);
-  //  const [message, setMessage] = useState("");
-  //  const [imageInfos, setImageInfos] = useState([]);
-  // const [selectedIndex, setSelectedIndex] = useState("Denoising Type");
+  const [isMaxView, setIsMaxView] = useState(false);
   const [denoiseType, setDenoiseType] = useState(""); // Dropdown Menu
   const [selectedItems, setSelectedItems] = useState("zoom"); // Tools selection
   const [alertOpen, setAlertOpen] = useState(false);
+  const [mimeType, setMimeType] = useState("");
+  const [filename, setFilename] = useState("");
+  const [uploadedImageSrc, setuploadedImageSrc] = useState("");
+  const [tiffFile, setTiffFile] = useState("");
+  const [baSliderImages, setBaSliderImages] = useState({
+    firstImage: null,
+    secondImage: null,
+  });
   const [alertOption, setAlertOption] = useState({
     severity: "info",
     message: "",
@@ -77,30 +85,16 @@ const ImageUpload = () => {
 
   const [imageIds, setImageIds] = useState([]);
 
-  // const handleSelect = (e) => {
-  //   console.log("=-=-=-=-=-=-=-", e);
-  //   setSelectedIndex(e);
-  //   //setIsPreviewBefore(false);
-  // };
   const selectFile = (e) => {
-    const newIds = [];
-    const image = cornerstoneWADOImageLoader.wadouri.fileManager.add(
-      e.target.files[0]
-    );
-    // console.log("=====", e.target.files[0]);
-    // console.log("What is image here : ", image);
-    newIds.push(image);
-    // console.log(newIds);
-    setImageIds(newIds);
-    setCurrentFile(e.target.files[0]);
-    setPreviewImage(URL.createObjectURL(e.target.files[0]));
-    // console.log("Preview Image : ", previewImage);
-    if (e.target.files[0].type === "") {
-      setIsJpegOrPng(false);
-    }
-    //setImageIds(URL.createObjectURL(e.target.files[0]));
-    //console.log("Image id after file selection : ", imageIds);
-    //setMessage("");
+    if (!e.target.files[0]) return false;
+    const file = e.target.files[0];
+    setMimeType(file.name.split(".")[1]);
+    setFilename(file.name.split(".")[0]);
+    setCurrentFile(file);
+    setUploadAndPreviewImage(false);
+    setIsImageDenoising(false);
+    setDenoisedImage(null);
+    console.log(file.name);
   };
 
   // ----------- Current local working demo
@@ -108,70 +102,97 @@ const ImageUpload = () => {
   //   initCornerstone(); // Initializing Cornerstone
   //   setUploadAndPreviewImage(previewImage);
   // };
-  const handleDenoisingImage = () => {
-    setIsImageDenoising(true);
-    return new Promise((resolve) =>
-      setTimeout(() => {
-        resolve(
-          setIsImageDenoising(false),
-          setDenoisedImage(uploadAndPreviewImage)
-        );
-      }, 2000)
-    );
-  };
 
-  // const handleTabSelect = (ekey) => {
-  //   console.log("type of tab event is : ", ekey);
-  //   if (ekey === "before") {
-  //     setPreviewImage(previewImage);
-  //   } else {
-  //     //  setImageInfos(imageInfo);
-  //     setImageIds(imageIds);
-  //     //  axios
-  //     //    .get("../jsondata.js")
-  //     //    .then((res) => {
-  //     //      setImageInfos(res.data);
-  //     //      console.log("data object : ", res.data);
-  //     //    })
-  //     //    .catch((err) => console.log(err));
-  //   }
-  // };
-  //  const getDenoisedImage = async () => {
-  //    await axios
-  //      .get("/jsondata.json")
-  //      .then((res) => {
-  //        setImageInfos(res.data);
-  //        console.log("data object : ", res.data);
-  //      })
-  //      .catch((err) => console.log(err));
-  //  };
-
+  // Upload image
   const uploadImage = () => {
-    UploadService.upload(currentFile, (event) => {
-      setProgress(Math.round((100 * event.loaded) / event.total));
-    })
+    setUploadAndPreviewImage(true);
+    UploadService.upload(currentFile)
       .then((response) => {
-        // setMessage(response.data.message);
-        // return UploadService.getFiles();
+        const resData = response.data;
         initCornerstone(); // Initializing Cornerstone
-        openAlert(response.data, 'success', 'Success')
-        setUploadAndPreviewImage(previewImage);
+        if (mimeType === "dcm") {
+          setIsJpegOrPng(false);
+          const image =
+            cornerstoneWADOImageLoader.wadouri.fileManager.add(currentFile);
+          setImageIds([image]);
+          // const blobData = new Blob([currentFile]);
+          // console.log(blobData);
+          // setBaSliderImages((prevState) => ({
+          //   ...prevState,
+          //   secondImage: image.src,
+          // }));
+        } else {
+          setIsJpegOrPng(true);
+          const reader = new FileReader();
+          reader.onload = async () => {
+            // const element = await document.getElementById("cornerStoneImageB");
+            const image = new Image();
+            image.src = reader.result;
+            image.onload = () => {
+              // const cornerStone = window.cornerstone;
+              // cornerStone.enable(element);
+              setuploadedImageSrc(image.src);
+              setBaSliderImages((prevState) => ({
+                ...prevState,
+                secondImage: image.src,
+              }));
+              // cornerStone
+              //   .loadImage(image.src)
+              //   .then((image) => {
+              //     cornerStone.displayImage(element, image);
+              //   })
+              //   .catch((err) => {
+              //     console.log(err);
+              //     throw err;
+              //   });
+            };
+          };
+          reader.readAsDataURL(currentFile);
+        }
+        openAlert(resData.data, "success", "Success");
       })
-      // .then((files) => {
-      //   setImageInfos(files.data);
-      // })
       .catch((err) => {
-        // if (err.response && err.response.data && err.response.data.message) {
-        //   setMessage(err.response.data.message);
-        // } else {
-        //   setMessage("Could not upload the Image!");
-        // }
-        openAlert(`${err?.message ? err?.message : 'Server Error'}`, 'error', 'Error')
-        console.log(`Error: ${err}`);
+        const error = err?.toJSON();
+        openAlert(
+          `${error?.message ? error?.message : "Server Error"}`,
+          "error",
+          "Error"
+        );
         setCurrentFile(undefined);
       });
   };
 
+  const handleDenoisingImage = (event) => {
+    event.stopPropagation();
+    setIsImageDenoising(true);
+    const urlPath =
+      mimeType === "dcm"
+        ? `dcmtopng/${filename}`
+        : mimeType === "png"
+        ? `pngtopng/${filename}`
+        : `getfile/${filename}`;
+    UploadService.denoiseImage(urlPath)
+      .then((response) => {
+        let imageData = response.data?.imageData
+          ? response.data?.imageData
+          : response.data;
+        setDenoiseResult(response.data);
+        let imageResult = `data:image/${mimeType};base64,${imageData}`;
+        setIsImageDenoising(false);
+        setDenoisedImage(imageResult); // set base64
+        openAlert("Successfully Denoised", "success", "Denoised");
+        setDenoiseStatus("SUCCESS");
+        setBaSliderImages((prevState) => ({
+          ...prevState,
+          firstImage: imageResult,
+        }));
+      })
+      .catch((err) => {
+        openAlert(`${err?.message ? err?.message : err}`, "error", "Error");
+        setIsImageDenoising(false);
+        setDenoiseStatus("ERROR");
+      });
+  };
   // Cornerstone Tools active and passive
   const setPassive = (tool) => {
     window.cornerstoneTools.setToolPassive(tool);
@@ -185,6 +206,19 @@ const ImageUpload = () => {
   // Choose Denoise Type
   const handleChange = (event) => {
     setDenoiseType(event.target.value);
+  };
+  // Set comparison screen view
+  const comparisonViewMode = (event) => {
+    event.stopPropagation();
+    setIsMaxView((prev) => !prev);
+    const element = document.getElementById("imageSection");
+    if (!document.fullscreenElement) {
+      element.classList.add("fullScreen");
+      document.documentElement.requestFullscreen();
+    } else if (document.exitFullscreen) {
+      element.classList.remove("fullScreen");
+      document.exitFullscreen();
+    }
   };
   // Tools selection
   const handleToggle = (val) => {
@@ -215,32 +249,58 @@ const ImageUpload = () => {
     });
   };
 
+  // const downloadImage = () => {
+  //   const cornerstone = window.cornerstone;
+  //   const cornTool = window.cornerstoneTools;
+  //   const enabledElement = cornerstone.getEnabledElementsByImageId(imageIds[0]);
+
+  //   cornTool.
+  //   console.log(crnImage);
+  // };
+
   useEffect(() => {
     //  UploadService.getFiles().then((response) => {
     //    setImageInfos(response.data);
     //  }, []);
+    // console.log(Tiff);
+    return () => {
+      URL.revokeObjectURL(denoisedImage);
+    };
   }, []);
   return (
     <div className="d-flex flex-column col px-0 bg-light">
       <NavbarComponent />
       <div className="col-12 px-0 d-flex flex-column uploadSection h-100">
         <div className="col-12 px-4">
-          <div className="col-12 customCard">
-            <div className="col-12 customCardHeader font-medium bg-light shadow-sm">
+          <div className="col-12">
+            {/* <div className="col-12 customCardHeader font-medium bg-light shadow-sm">
               Upload File to Denoise (.jpg, jpeg, .png, .dcm)
-            </div>
-            <div className="col-12 p-2">
-              <div className="col d-flex flex-row flex-wrap justify-content-center align-items-center">
+              Upload File to Denoise
+            </div> */}
+            <div className="col-12 p-2 shadow-sm">
+              <div className="col d-flex flex-row flex-wrap justify-content-center align-items-start">
                 <div>
                   <input
-                    className="form-control font-weight-bold"
+                    className="form-control font-weight-bold uploadFileInput"
                     type="file"
                     id="formFile"
-                    accept=".jpg, .jpeg, .dcm, .png"
+                    accept=".dcm, .png, .jpeg, .jpg"
                     onChange={selectFile}
                   />
+                  <div className="col-12 py-1 text-info text-xsmall d-flex align-items-center">
+                    {["png", "jpeg", "jpg"].includes(mimeType) && (
+                      <>
+                        <BiInfoCircle size={16} className="mx-1" />
+                        Zoom  / Annotate supports only .DCM format.
+                      </>
+                    )}
+                  </div>
                 </div>
-                <FormControl sx={{ m: 1, width: 145 }} size="small">
+                <FormControl
+                  sx={{ m: 1, width: 145 }}
+                  size="small"
+                  className="mt-0"
+                >
                   <Select
                     value={denoiseType}
                     displayEmpty
@@ -249,9 +309,14 @@ const ImageUpload = () => {
                     <MenuItem disabled value="">
                       Denoise Type
                     </MenuItem>
-                    <MenuItem value={"ADL"}>ADL</MenuItem>
-                    <MenuItem value={"WLT"}>WLT</MenuItem>
-                    <MenuItem value={"CLT"}>CLT</MenuItem>
+                    <MenuItem
+                      value={"ADL"}
+                      title="Adversarial Distortion Learning for Denoising"
+                    >
+                      ADL
+                    </MenuItem>
+                    {/* <MenuItem value={"WLT"}>WLT</MenuItem> */}
+                    {/* <MenuItem value={"CLT"}>CLT</MenuItem> */}
                   </Select>
                 </FormControl>
                 <Button
@@ -263,70 +328,98 @@ const ImageUpload = () => {
                 >
                   Upload
                 </Button>
-                <Button
-                  className="btn-ct mx-2"
-                  variant="conatined"
-                  disabled={!currentFile}
-                  onClick={handleDenoisingImage}
-                >
-                  Denoise
-                </Button>
               </div>
             </div>
           </div>
           {uploadAndPreviewImage && (
-            <div className="col-12 mx-auto py-3">
+            <div className="col-12 mx-auto py-3" id="imageSection">
               <Accordion defaultExpanded={true} className="bg-light">
                 <AccordionSummary
                   expandIcon={<FaChevronDown />}
                   aria-controls="panel1a-content"
                   id="panel1a-header"
                 >
-                  <Typography className="text-ct-dark font-medium">
-                    Image comparison viewer
-                  </Typography>
+                  <span className="col-11 mx-auto px-4 d-flex justify-content-between">
+                    <div className="d-flex align-items-center col-6 justify-content-start">
+                      <Button
+                        className="btn-ct"
+                        style={{ marginRight: "20px" }}
+                        variant="conatined"
+                        disabled={!currentFile}
+                        onClick={handleDenoisingImage}
+                      >
+                        Denoise
+                      </Button>
+                      {!isJpegOrPng && (
+                        <ToggleButtons
+                          selectedItems={selectedItems}
+                          handleToggle={handleToggle}
+                        />
+                      )}
+                    </div>
+                    <IconButton onClick={(e) => comparisonViewMode(e)}>
+                      {isMaxView ? (
+                        <FiMinimize size={20} title="Minimize view" />
+                      ) : (
+                        <FiMaximize size={20} title="Maximize view" />
+                      )}
+                    </IconButton>
+                  </span>
                 </AccordionSummary>
                 <AccordionDetails>
-                  <div className="col-12 py-2 d-flex justify-content-center">
-                    <ToggleButtons
-                      selectedItems={selectedItems}
-                      handleToggle={handleToggle}
-                    />
-                  </div>
                   <div className="d-flex flex-row flex-nowrap justify-content-space-between col-lg-11 mx-auto">
                     <div className="col-6 px-4">
-                      {uploadAndPreviewImage && (
-                        <div>
-                          <h5>Before</h5>
-                          {isJpegOrPng ? (
-                            <img
-                              className="preview"
-                              src={uploadAndPreviewImage}
-                              alt=""
+                      <h5>Before</h5>
+                      {isJpegOrPng ? (
+                        <>
+                          {mimeType !== "tiff" ? (
+                            <div
+                              id="cornerStoneImageB"
                               style={{
                                 minWidth: "100%",
                                 height: "512px",
                                 flex: "1",
                                 border: "1px solid #0197f6",
                               }}
-                            />
+                            >
+                              <img
+                                width="100%"
+                                height="512px"
+                                src={uploadedImageSrc}
+                                alt="Uploaded"
+                              />
+                            </div>
                           ) : (
-                            <CornerstoneViewport
-                              tools={tools}
-                              imageIds={imageIds}
+                            <TIFFViewer
                               style={{
                                 minWidth: "100%",
                                 height: "512px",
                                 flex: "1",
                                 border: "1px solid #0197f6",
                               }}
+                              tiff={tiffFile}
+                              lang="en"
                             />
                           )}
-                        </div>
+                        </>
+                      ) : (
+                        <>
+                          <CornerstoneViewport
+                            id="cornerStoneImageA"
+                            tools={tools}
+                            imageIds={imageIds}
+                            style={{
+                              minWidth: "100%",
+                              height: "512px",
+                              flex: "1",
+                              border: "1px solid #0197f6",
+                            }}
+                          />
+                        </>
                       )}
                     </div>
                     <div className="col-6 px-4">
-                      {isImageDenoising ? (
+                      {isImageDenoising && (
                         <div className="d-flex justify-content-center flex-column align-items-center h-100">
                           <div
                             className="spinner-border spinner-border-md"
@@ -337,44 +430,83 @@ const ImageUpload = () => {
                             Denoising Image please wait...
                           </font>
                         </div>
-                      ) : (
-                        denoisedImage && (
-                          <div>
-                            <h5>After</h5>
-                            {isJpegOrPng ? (
-                              <>
-                                <span>It's Jpeg | PNG</span>
-                                <img
-                                  className="preview"
-                                  src={denoisedImage}
-                                  alt=""
-                                  style={{
-                                    minWidth: "100%",
-                                    height: "512px",
-                                    flex: "1",
-                                    border: "1px solid #0197f6",
-                                  }}
-                                />
-                              </>
-                            ) : (
-                              <CornerstoneViewport
-                                tools={tools}
-                                imageIds={imageIds}
-                                style={{
-                                  minWidth: "100%",
-                                  height: "512px",
-                                  flex: "1",
-                                  border: "1px solid #0197f6",
-                                }}
-                              />
-                            )}
-                          </div>
-                        )
+                      )}
+                      {denoisedImage && (
+                        <div>
+                          <h5>After</h5>
+                          <img
+                            className="preview"
+                            src={denoisedImage}
+                            alt=""
+                            lazy="true"
+                            style={{
+                              minWidth: "100%",
+                              height: "512px",
+                              flex: "1",
+                              border: "1px solid #0197f6",
+                            }}
+                          />
+                        </div>
+                      )}
+                      {denoiseStatus === "ERROR" && (
+                        <div className="d-flex justify-content-center align-items-center h-100">
+                          <h5 className="align-items-center justify-content-center d-flex">
+                            <BiErrorCircle
+                              size={24}
+                              className="text-danger mr-3"
+                            />
+                            <font className="d-inline-block mx-2 text-danger">
+                              Denoiser Error, Please try again
+                            </font>
+                          </h5>
+                        </div>
                       )}
                     </div>
+                    {/* <div>
+                      <button onClick={downloadImage}>Download Image</button>
+                    </div> */}
                   </div>
                 </AccordionDetails>
               </Accordion>
+              {denoisedImage && !isMaxView && (
+                <Accordion className="bg-light">
+                  <AccordionSummary
+                    expandIcon={<FaChevronDown />}
+                    aria-controls="panel2a-content"
+                    id="panel2a-header"
+                  >
+                    <Typography>Comparison Summary View</Typography>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    {isJpegOrPng && (
+                      <div className="col-4 mx-auto">
+                        <BASliderComponent
+                          firstImage={baSliderImages?.firstImage}
+                          secondImage={baSliderImages?.secondImage}
+                        />
+                      </div>
+                    )}
+                    <div className="col-8 pt-4 mx-auto">
+                      <table className="table table-bordered">
+                        <thead>
+                          <tr>
+                            <th>Name</th>
+                            <th>Resolution</th>
+                            <th>Peak Signal Noise Ratio</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td>{desnoiseResult.imageName}</td>
+                            <td>{desnoiseResult?.resolution}</td>
+                            <td>{desnoiseResult.psnr.toString()}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </AccordionDetails>
+                </Accordion>
+              )}
             </div>
           )}
         </div>
@@ -386,8 +518,7 @@ const ImageUpload = () => {
         autoHideDuration={2000}
         key={"top right"}
       >
-        <Alert severity={alertOption?.severity}>
-          <AlertTitle>{alertOption?.title}</AlertTitle>
+        <Alert severity={alertOption?.severity} variant="filled">
           {alertOption?.message}
         </Alert>
       </Snackbar>

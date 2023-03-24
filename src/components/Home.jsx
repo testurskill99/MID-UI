@@ -21,12 +21,12 @@ const Home = () => {
               <p className="text-justify font-regular pt-4 subTitle text-white">
                 A medical image denoiser is a computational tool used to reduce
                 noise in medical images. It is software alogrithm that applies
-                vaious mathematical and statistical methods to eliminate
+                various mathematical and statistical methods to eliminate
                 unwanted artificats and enhance the visual quality of the image.
               </p>
             </div>
             <div className="col-5 mx-auto pt-4">
-              <div className="col-11">
+              <div className="col-11 px-2">
                 <BASliderComponent
                   delimiterColor="#a3a4a3"
                   withResizeFeel="true"
@@ -113,14 +113,16 @@ const Home = () => {
             </div>
           </div>
         </section>
-        <section className="section-c">
+        {/* <section className="section-c">
           <div className="col-lg-10 col-12 mx-auto">
             <h2 className="text-center font-medium title text-ct-dark pb-5">
               <font className="centerBorder">Other Services</font>
             </h2>
-            <div className="col-12 d-flex flex-row flex-wrap">
-              {/* <ToggleButtons /> */}
-            </div>
+          </div>
+        </section> */}
+        <section className="section-d bg-light">
+          <div className="col-12 px-0 py-2 text-center">
+            <font size="2">Copyright © 2023 Medical Image Denoiser by Citiustech. All Rights Reserved.</font>
           </div>
         </section>
       </div>

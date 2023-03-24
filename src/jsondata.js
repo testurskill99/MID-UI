@@ -1,13 +1,11 @@
 export const imageInfo = [
   {
-    id: 1,
-    path: "./images/midlogo.png",
     type: "png",
+    url: "pngtopng"
   },
   {
-    id: 2,
-    path: "../images/jpgsample.jpg",
     type: "jpg",
+    url: "jpgtojpg"
   },
   {
     id: 3,
