@@ -3,7 +3,6 @@ import ReactBeforeSliderComponent from "react-before-after-slider-component";
 import "react-before-after-slider-component/dist/build.css";
 
 function BASliderComponent(props) {
-  console.log(props);
   const FIRST_IMAGE = {
     imageUrl: props.firstImage,
   };

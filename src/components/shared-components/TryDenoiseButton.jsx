@@ -13,7 +13,6 @@ function TryDenoiseButtonComponent() {
         onClick={(e) => navigate("/image-upload")}
         startIcon={<BsImages size={14} style={{ marginLeft: "5px" }} />}
       >
-        {" "}
         Try Denoiser now
       </Button>
     </div>

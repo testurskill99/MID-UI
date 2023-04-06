@@ -20,9 +20,12 @@ function ToggleButtons(props) {
       color: "white",
       backgroundColor: '#214c7f'
     },
-    "&.Mui-selected:hover": {
-      backgroundColor: '#193961'
-    }
+    "&.MuiToggleButton-root:not(:disabled):hover": {
+      backgroundColor: 'rgba(0, 0, 0, 0.04) !important'
+    },
+    "&.MuiToggleButton-root.Mui-selected:hover": {
+      backgroundColor: '#193961 !important'
+    },
   });
 
   return (

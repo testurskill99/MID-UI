@@ -22,7 +22,7 @@ const Home = () => {
                 A medical image denoiser is a computational tool used to reduce
                 noise in medical images. It is software alogrithm that applies
                 various mathematical and statistical methods to eliminate
-                unwanted artificats and enhance the visual quality of the image.
+                unwanted noise and enhance the visual quality of the image.
               </p>
             </div>
             <div className="col-5 mx-auto pt-4">

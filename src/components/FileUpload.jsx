@@ -6,8 +6,11 @@ import cornerstoneWADOImageLoader from "cornerstone-wado-image-loader";
 import initCornerstone from "../initCornerStone";
 import "./FileUpload.css";
 
+import IconButton from "@mui/material/IconButton";
 import ToggleButtons from "./ToggleButtons/ToggleButtons";
 import NavbarComponent from "./Navbar";
+
+import { urlInfo } from "../jsondata";
 
 import Accordion from "@mui/material/Accordion";
 import AccordionSummary from "@mui/material/AccordionSummary";
@@ -17,14 +20,32 @@ import MenuItem from "@mui/material/MenuItem";
 import FormControl from "@mui/material/FormControl";
 import Select from "@mui/material/Select";
 import { FaChevronDown } from "react-icons/fa";
-import { BiErrorCircle, BiInfoCircle, BiUpload } from "react-icons/bi";
+import { BiErrorCircle, BiUpload } from "react-icons/bi";
+import { MdInfo } from 'react-icons/md';
 import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
-import { IconButton } from "@mui/material";
 import { FiMaximize, FiMinimize } from "react-icons/fi";
 import BASliderComponent from "./ba_slider/BASlider";
+import { styled } from "@mui/material/styles";
+import Tooltip, { tooltipClasses } from "@mui/material/Tooltip";
 
-import "react-tiff/dist/index.css";
+import DenoiseTypesComponent from "./shared-components/DenoiseTypes";
+import { InputLabel } from "@mui/material";
+
+const HtmlTooltip = styled(({ className, ...props }) => (
+  <Tooltip {...props} classes={{ popper: className }} />
+))(({ theme }) => ({
+  [`& .${tooltipClasses.tooltip}`]: {
+    backgroundColor: "#f5f5f9",
+    color: "rgba(0, 0, 0, 0.87)",
+    maxWidth: "100% !important",
+    fontSize: theme.typography.pxToRem(12),
+    border: "1px solid #dadde9",
+  },
+  "&.MuiTooltip-popper": {
+    zIndex: "10000 !important",
+  },
+}));
 
 const ImageUpload = () => {
   const [currentFile, setCurrentFile] = useState(undefined);
@@ -35,7 +56,7 @@ const ImageUpload = () => {
   const [denoiseStatus, setDenoiseStatus] = useState("SUCCESS");
   const [isJpegOrPng, setIsJpegOrPng] = useState(true);
   const [isMaxView, setIsMaxView] = useState(false);
-  const [denoiseType, setDenoiseType] = useState(""); // Dropdown Menu
+  const [denoiseType, setDenoiseType] = useState("adl"); // Dropdown Menu
   const [selectedItems, setSelectedItems] = useState("zoom"); // Tools selection
   const [alertOpen, setAlertOpen] = useState(false);
   const [mimeType, setMimeType] = useState("");
@@ -43,7 +64,7 @@ const ImageUpload = () => {
   const [uploadedImageSrc, setuploadedImageSrc] = useState("");
   const [baSliderImages, setBaSliderImages] = useState({
     firstImage: null,
-    secondImage: null,
+    secondImage: null
   });
   const [alertOption, setAlertOption] = useState({
     severity: "info",
@@ -91,14 +112,8 @@ const ImageUpload = () => {
     setUploadAndPreviewImage(false);
     setIsImageDenoising(false);
     setDenoisedImage(null);
-    console.log(file.name);
+    // console.log(file.name);
   };
-
-  // ----------- Current local working demo
-  // const uploadImage = () => {
-  //   initCornerstone(); // Initializing Cornerstone
-  //   setUploadAndPreviewImage(previewImage);
-  // };
 
   // Upload image
   const uploadImage = () => {
@@ -162,12 +177,8 @@ const ImageUpload = () => {
   const handleDenoisingImage = (event) => {
     event.stopPropagation();
     setIsImageDenoising(true);
-    const urlPath =
-      mimeType === "dcm"
-        ? `dcmtopng/${filename}`
-        : mimeType === "png"
-        ? `pngtopng/${filename}`
-        : `getfile/${filename}`;
+    const denoisePath = urlInfo.filter((murl) => murl.type === mimeType);
+    const urlPath = `${denoisePath[0].url}/${filename}`;
     UploadService.denoiseImage(urlPath)
       .then((response) => {
         let imageData = response.data?.imageData
@@ -203,6 +214,7 @@ const ImageUpload = () => {
   // Choose Denoise Type
   const handleChange = (event) => {
     setDenoiseType(event.target.value);
+    // event.stopPropagation();
   };
   // Set comparison screen view
   const comparisonViewMode = (event) => {
@@ -246,6 +258,35 @@ const ImageUpload = () => {
     });
   };
 
+  // Handle denoise mode changes
+  const handleDenoiseType = (val) => {
+    const sliderElement = document.getElementsByClassName(
+      "before-after-slider"
+    );
+    if (sliderElement[0]) sliderElement[0].classList.add("loading");
+    const denoiseTypeURL = urlInfo.filter(
+      (murl) => murl.type === "denoisemode"
+    );
+    const urlPath = `${denoiseTypeURL[0].url}/${filename}/${val}`;
+    UploadService.getMethod(urlPath)
+      .then((response) => {
+        let imageData = response.data?.imageData
+          ? response.data?.imageData
+          : response.data;
+        let imageResult = `data:image/${mimeType};base64,${imageData}`;
+        setBaSliderImages((prevState) => ({
+          ...prevState,
+          firstImage: imageResult,
+          psnr: response.data?.psnr
+        }));
+        if (sliderElement[0]) sliderElement[0].classList.remove("loading");
+      })
+      .catch((err) => {
+        openAlert(`${err?.message ? err?.message : err}`, "error", "Error");
+        if (sliderElement[0]) sliderElement[0].classList.remove("loading");
+      });
+  };
+
   // const downloadImage = () => {
   //   const cornerstone = window.cornerstone;
   //   const cornTool = window.cornerstoneTools;
@@ -270,12 +311,8 @@ const ImageUpload = () => {
       <div className="col-12 px-0 d-flex flex-column uploadSection h-100">
         <div className="col-12 px-4">
           <div className="col-12">
-            {/* <div className="col-12 customCardHeader font-medium bg-light shadow-sm">
-              Upload File to Denoise (.jpg, jpeg, .png, .dcm)
-              Upload File to Denoise
-            </div> */}
             <div className="col-12 p-2 shadow-sm">
-              <div className="col d-flex flex-row flex-wrap justify-content-center align-items-start">
+              <div className="col d-flex flex-row flex-wrap justify-content-center align-items-center">
                 <div>
                   <input
                     className="form-control font-weight-bold uploadFileInput"
@@ -284,36 +321,60 @@ const ImageUpload = () => {
                     accept=".dcm, .png, .jpeg, .jpg"
                     onChange={selectFile}
                   />
-                  <div className="col-12 py-1 text-info text-xsmall d-flex align-items-center">
+                  {/* <div className="col-12 py-1 text-info text-xsmall d-flex align-items-center">
                     {["png", "jpeg", "jpg"].includes(mimeType) && (
                       <>
                         <BiInfoCircle size={16} className="mx-1" />
                         Zoom / Annotate supports only .DCM format.
                       </>
                     )}
-                  </div>
+                  </div> */}
                 </div>
                 <FormControl
-                  sx={{ m: 1, width: 145 }}
+                  sx={{ m: 1, width: 325 }}
                   size="small"
-                  className="mt-0"
+                  className="mt-0 mx-3"
+                  variant="standard"
                 >
+                  <InputLabel>Choose Denoise Type</InputLabel>
                   <Select
                     value={denoiseType}
                     displayEmpty
+                    onOpen={(e) => e.stopPropagation()}
+                    onClose={(e) => e.stopPropagation()}
                     onChange={handleChange}
                   >
-                    <MenuItem disabled value="">
-                      Denoise Type
+                    <MenuItem value={"adl"}>
+                      Adversarial Distortion Learning (ADL)
                     </MenuItem>
                     <MenuItem
-                      value={"ADL"}
-                      title="Adversarial Distortion Learning for Denoising"
+                      onClick={(e) => e.stopPropagation()}
+                      value={"median"}
+                      disabled
                     >
-                      ADL
+                      Median Denoising (CV2)
                     </MenuItem>
-                    {/* <MenuItem value={"WLT"}>WLT</MenuItem> */}
-                    {/* <MenuItem value={"CLT"}>CLT</MenuItem> */}
+                    <MenuItem
+                      onClick={(e) => e.stopPropagation()}
+                      value={"mean"}
+                      disabled
+                    >
+                      Mean Denoising (CV2)
+                    </MenuItem>
+                    <MenuItem
+                      onClick={(e) => e.stopPropagation()}
+                      value={"gaussian"}
+                      disabled
+                    >
+                      Gaussian Denoising (CV2)
+                    </MenuItem>
+                    <MenuItem
+                      onClick={(e) => e.stopPropagation()}
+                      disabled
+                      value={"bm3d"}
+                    >
+                      Block-Matching 3D (BM3D)
+                    </MenuItem>
                   </Select>
                 </FormControl>
                 <Button
@@ -338,6 +399,31 @@ const ImageUpload = () => {
                 >
                   <span className="col-11 mx-auto px-4 d-flex justify-content-between">
                     <div className="d-flex align-items-center col-6 justify-content-start">
+                      {/* <FormControl
+                        sx={{ m: 1, width: 145 }}
+                        size="small"
+                      >
+                        <Select
+                          value={denoiseType}
+                          displayEmpty
+                          onOpen={(e) => e.stopPropagation()}
+                          onClose={(e) => e.stopPropagation()}
+                          onChange={handleChange}
+                        >
+                          <MenuItem disabled value="">
+                            Denoise Type
+                          </MenuItem>
+                          <MenuItem
+                            value={"ADL"}
+                            title="Adversarial Distortion Learning for Denoising"
+                          >
+                            ADL
+                          </MenuItem>
+                          <MenuItem onClick={(e) => e.stopPropagation()} disabled value={"CV2"}>
+                            CV2
+                          </MenuItem>
+                        </Select>
+                      </FormControl> */}
                       <Button
                         className="btn-ct"
                         style={{ marginRight: "20px" }}
@@ -381,25 +467,24 @@ const ImageUpload = () => {
                             <img
                               width="100%"
                               height="512px"
+                              lazy="true"
                               src={uploadedImageSrc}
                               alt="Uploaded"
                             />
                           </div>
                         </>
                       ) : (
-                        <>
-                          <CornerstoneViewport
-                            id="cornerStoneImageA"
-                            tools={tools}
-                            imageIds={imageIds}
-                            style={{
-                              minWidth: "100%",
-                              height: "512px",
-                              flex: "1",
-                              border: "1px solid #0197f6",
-                            }}
-                          />
-                        </>
+                        <CornerstoneViewport
+                          id="cornerStoneImageA"
+                          tools={tools}
+                          imageIds={imageIds}
+                          style={{
+                            minWidth: "100%",
+                            height: "512px",
+                            flex: "1",
+                            border: "1px solid #0197f6",
+                          }}
+                        />
                       )}
                     </div>
                     <div className="col-6 px-4">
@@ -417,7 +502,28 @@ const ImageUpload = () => {
                       )}
                       {denoisedImage && (
                         <div>
-                          <h5>After</h5>
+                          <h5 className="d-flex flex-row justify-content-between">
+                            <span>After</span>
+                            <span>
+                              <span className="secondarySub">
+                                Peak to Signal Noise Ratio
+                              </span>
+                              <HtmlTooltip
+                                title={
+                                  <HTMLtooltipContent
+                                    htmlContent={desnoiseResult}
+                                  />
+                                }
+                              >
+                                <span>
+                                  <MdInfo
+                                    size={20}
+                                    className="ct-color-primary crsr-pointer mx-2"
+                                  />
+                                </span>
+                              </HtmlTooltip>
+                            </span>
+                          </h5>
                           <img
                             className="preview"
                             src={denoisedImage}
@@ -453,7 +559,7 @@ const ImageUpload = () => {
                 </AccordionDetails>
               </Accordion>
               {denoisedImage && !isMaxView && (
-                <Accordion className="bg-light">
+                <Accordion className="bg-light" defaultExpanded={true}>
                   <AccordionSummary
                     expandIcon={<FaChevronDown />}
                     aria-controls="panel2a-content"
@@ -463,30 +569,22 @@ const ImageUpload = () => {
                   </AccordionSummary>
                   <AccordionDetails>
                     {isJpegOrPng && (
-                      <div className="col-4 mx-auto">
+                      <div className="col-4 mx-auto baSlider">
                         <BASliderComponent
                           firstImage={baSliderImages?.firstImage}
                           secondImage={baSliderImages?.secondImage}
                         />
                       </div>
                     )}
-                    <div className="col-8 pt-4 mx-auto">
-                      <table className="table table-bordered">
-                        <thead>
-                          <tr>
-                            <th>Name</th>
-                            <th>Resolution</th>
-                            <th>Peak Signal Noise Ratio</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr>
-                            <td>{desnoiseResult.imageName}</td>
-                            <td>{desnoiseResult?.resolution}</td>
-                            <td>{desnoiseResult.psnr.toString()}</td>
-                          </tr>
-                        </tbody>
-                      </table>
+                    <div className="col-7 pt-4 mx-auto">
+                      <h6 className="mb-3 d-flex flex-row justify-content-between">
+                        <span>Output from different denoising techniques</span>
+                        {/* <span className="px-2">PSNR : {baSliderImages?.psnr ?? '75.8'}</span> */}
+                      </h6>
+                      <DenoiseTypesComponent
+                        bgimage={baSliderImages?.firstImage}
+                        handleClick={handleDenoiseType}
+                      />
                     </div>
                   </AccordionDetails>
                 </Accordion>
@@ -507,6 +605,39 @@ const ImageUpload = () => {
         </Alert>
       </Snackbar>
     </div>
+  );
+};
+
+const HTMLtooltipContent = (args) => {
+  const psnrUrl = urlInfo.find((fVal) => fVal.type === "psnr_url");
+  return (
+    <>
+      <table className="table table-bordered mb-0">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Resolution</th>
+            <th>PSNR</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>{args?.htmlContent?.imageName}</td>
+            <td>{args?.htmlContent?.resolution}</td>
+            <td className="text-center">
+              {args?.htmlContent?.psnr.toString()}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div className="col-12 my-2" style={{ textAlign: "right" }}>
+        <button type="button">
+          <a href={psnrUrl.url} target="_blank" rel="noreferrer">
+            Read more
+          </a>
+        </button>
+      </div>
+    </>
   );
 };
 
